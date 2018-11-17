@@ -1,0 +1,6 @@
+LineNumber;OrderItemId;OrderId;BuyerName;BuyerEmail;Address;Postcode;SalePrice;ShippingPrice;SKU;Status;OrderDate
+1;1;1;Kiss Béla;kiss.bela@vmi.com;Budapest, Könyves Kálmán utca 12.;1002;3000;900;12345-AB;IN_STOCK;2018-11-16
+2;2;1;Kiss Béla;kiss.bela@vmi.com;Budapest, Könyves Kálmán utca 12.;1002;5000;1000;12346-AC;IN_STOCK;2018-11-17
+3;3;2;Kovács István;kovacs.istvan@akarmi.com;Debrecen, Mester utca 6.;4026;4500;900;12345-AD;OUT_OF_STOCK;
+4;4;3;Szabó János;szabo.janos@barmi.hu;Balatonlelle, Fõ utca 18.;8965;9000;1500;12345-AF;IN_STOCK;
+5;5;4;Gál Mária;gal.maria@vmi.com;Harkány, Kölcsey Ferenc tér 4.;7565;15000;2000;12345-AG;IN_STOCK;2018-11-16
