@@ -1,0 +1,13 @@
+LineNumber;Status;Message
+1;;OK
+2;(conn=23) Duplicate entry '1' for key 'PRIMARY';ERROR
+3;;OK
+4;;OK
+5;;OK
+6;Not valid email;ERROR
+7;Address should not be empty;ERROR
+8;Not valid date format;ERROR
+9;Not valid postcode;ERROR
+10;Not valid sale price;ERROR
+11;;OK
+12;Not valid status;ERROR

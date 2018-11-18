@@ -176,17 +176,17 @@ public class InputFileLine {
 		if(!isValidDateFormat("yyyy-MM-dd",this.orderDate,Locale.ENGLISH))
 			throw new InputException("Not valid date format");
 	
-		if(!isValidPostcode(this.postcode))
+		if(!isValidInteger(this.postcode))
 			throw new InputException("Not valid postcode");
 		
 		if(!isValidPrice(this.salePrice) || Double.parseDouble(this.salePrice) < 1.00 )
-			throw new InputException("Not valid sale price ");
+			throw new InputException("Not valid sale price");
 		
 		if(!isValidPrice(this.shippingPrice) || Double.parseDouble(this.shippingPrice) < 0.00 )
-			throw new InputException("Not valid shipping price ");
+			throw new InputException("Not valid shipping price");
 		
 		if(!isValidStatus(this.status))
-			throw new InputException("Not valid status");
+			throw new InputException("Not valid status");		
 		
 		return true;
 	
@@ -234,7 +234,7 @@ public class InputFileLine {
 	    return false;
 	}
 	
-	private boolean isValidPostcode(String postcode){
+	private boolean isValidInteger(String postcode){
 		try{
 			Integer.parseInt(postcode);
 		}catch(NumberFormatException e){
