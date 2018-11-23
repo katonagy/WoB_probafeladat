@@ -9,5 +9,6 @@ LineNumber;OrderItemId;OrderId;BuyerName;BuyerEmail;Address;Postcode;SalePrice;S
 8;8;9;Nagy Kálmán;nagy.kalman@akarmi.hu;Debrecen, Piac utca 6.;4032;1560.50;500.00;12345-AI;OUT_OF_STOCK;2018.05.20
 9;9;10;Kiss Virág;kiss.virag@barmi.com;Budapest, Tétényi út 56.;abc;5000.00;1000.00;12345-AG;IN_STOCK;
 10;10;11;Mester Péter;mester.peter@vmi.hu;Pécs, Alkotmány utca 40;7625;-8000;1500.00;12345-AI;IN_STOCK;
-11;11;12;Simon Katalin;simon.katalin@vmi.hu;Székesfehérvár, Fõ utca 23.;4561;4500.00;00.00;12345-AI;OUT_OF_STOCK;
+11;11;12;Simon Katalin;simon.katalin@vmi.hu;Székesfehérvár, Fõ utca 23.;4561;4500.00;-1.00;12345-AI;OUT_OF_STOCK;
 12;12;13;Kovács Éva;kovacs.eva@akarmi.hu;Budapest, Tétényi út 34.;1545;6500.00;990.00;12345-AH;jndfkjn;
+3;3;2;Kovács István;kovacs.istvan@akarmi.com;Debrecen, Mester utca 6.;4026;4500.00;900.00;12345-AD;OUT_OF_STOCK;

@@ -31,6 +31,7 @@ import javax.mail.internet.InternetAddress;
 
 import com.sun.corba.se.pept.encoding.InputObject;
 
+import ftp.FTPUpload;
 import database.DBManager;
 import model.DBParameters;
 import model.FTPParameters;
@@ -39,18 +40,20 @@ import model.InputFileLine;
 import model.Order;
 import model.OrderItem;
 import model.ResponseFileLine;
+import model.ResponseFileLineList;
+import model.Status;
 
 public class main {
 
 	private static DBParameters mariaDB;
 	private static FTPParameters ftp;
-	private static List<InputFileLine> inputFilelines;
-	private static List<ResponseFileLine> responseFileLines;
 	
 	public static void main(String[] args) {
 		readParameters("Connection.properties");
-		inputFilelines = readInputFile("inputFile.csv");		
-		responseFileLines = new ArrayList<>();
+		List<InputFileLine> inputFilelines = readInputFile("inputFile.csv");		
+		ResponseFileLineList responseFileList = new ResponseFileLineList();
+		OrderItem orderItem = null;
+		Order order = null;
 		
 		DBManager.getConnection(mariaDB.getIp(), mariaDB.getPort(), mariaDB.getUserName(), mariaDB.getPassword());
 		
@@ -58,105 +61,50 @@ public class main {
 			try {
 				inputFileLine.isValid();
 				
-				OrderItem orderItem = parseIntoOrderItem(inputFileLine);
-				Order order = parseIntoOrder(inputFileLine);
-				
-				DBManager.insertOrderIntoTable(order);		
-				DBManager.insertOrderItemIntoTable(orderItem);		
-				
-				addResponseFileLine(inputFileLine, "", Status.OK);
-				
+				orderItem = inputFileLine.parseIntoOrderItem();
+				order = inputFileLine.parseIntoOrder(inputFilelines);
 				
 			} catch (InputException e) {			
-				addResponseFileLine(inputFileLine, e.getMessage(), Status.ERROR);
+				responseFileList.addResponseFileLine(inputFileLine, e.getMessage(), Status.ERROR);
+				System.out.println(e.getMessage());
+				continue;
 						
-			} catch (SQLException e) {
-				addResponseFileLine(inputFileLine, e.getMessage(), Status.ERROR);
 			}
+			
+			try {
+				DBManager.insertOrderIntoTable(order);
+			} catch (SQLException e) {
+				if(!e.getMessage().contains("Duplicate")){
+					responseFileList.addResponseFileLine(inputFileLine, e.getMessage(), Status.ERROR);
+					System.out.println(e.getMessage());
+					continue;
+				}
+			}					
+			
+			try {
+				DBManager.insertOrderItemIntoTable(orderItem);
+			} catch (SQLException e) {
+				if(e.getMessage().contains("Duplicate"))
+					responseFileList.addResponseFileLine(inputFileLine, "Duplicated OrderItem", Status.ERROR);					
+				else
+					responseFileList.addResponseFileLine(inputFileLine, e.getMessage(), Status.ERROR);
+				
+				continue;
+			}
+			
+			responseFileList.addResponseFileLine(inputFileLine, "", Status.OK);
+			
 		}			
 
 		DBManager.closeConnection();		
 		
-		createResponseFile(responseFileLines);
+		createResponseFile(responseFileList.getList());
+		
+		FTPUpload.upload(ftp.getIp(), ftp.getUserName(), ftp.getPassword(), "responseFile.csv");
 		
 	}
 	
-	private static void addResponseFileLine(InputFileLine inputFileLine, String message, Status status) {
-		ResponseFileLine line = new ResponseFileLine();
-		line.setLineNumber(Integer.parseInt(inputFileLine.getLineNumber()));
-		line.setMessage(message);
-		line.setStatus(status.name());
-		
-		responseFileLines.add(line);		
-	}
-
-	private static OrderItem parseIntoOrderItem(InputFileLine inputFileLine) {
-		OrderItem item = new OrderItem();
-		
-		item.setOrderId(Integer.parseInt(inputFileLine.getOrderId()));
-		item.setOrderItemId(Integer.parseInt(inputFileLine.getOrderItemId()));
-		item.setSalePrice(Double.parseDouble(inputFileLine.getSalePrice()));
-		item.setShippingPrice(Double.parseDouble(inputFileLine.getShippingPrice()));
-		item.setSKU(inputFileLine.getSKU());
-		item.setStatus(inputFileLine.getStatus());
-		item.setTotalItemPrice(Double.parseDouble(inputFileLine.getSalePrice()) 
-				+ Double.parseDouble(inputFileLine.getShippingPrice()));
-		
-		return item;
-	}
-
-	private static Order parseIntoOrder(InputFileLine inputFileLine) {
-		Order item = new Order();
-		
-		item.setAddress(inputFileLine.getAddress());
-		item.setBuyerEmail(inputFileLine.getBuyerEmail());
-		item.setBuyerName(inputFileLine.getBuyerName());
-		item.setOrderId(Integer.parseInt(inputFileLine.getOrderId()));
-		item.setOrderTotalValue(calculateTotalItemPrice(inputFileLine.getOrderId()));
-		item.setPostcode(Integer.parseInt(inputFileLine.getPostcode()));
-		
-		if(inputFileLine.getOrderDate().isEmpty()){
-			Calendar cal = Calendar.getInstance();
-			item.setOrderDate(new Date(cal.getTimeInMillis()));
-		}else{
-			SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-			java.util.Date parsed;
-			try {
-				parsed = format.parse(inputFileLine.getOrderDate());
-				item.setOrderDate(new Date(parsed.getTime()));
-			} catch (ParseException e) {
-				e.printStackTrace();
-			}			
-		}
-		
-		return item;
-		
-	}
-
-	private static double calculateTotalItemPrice(String orderId) {
-		double counter = 0;
-		
-		for(InputFileLine line : inputFilelines){
-			
-			try {
-				
-				if(line.isValid() && line.getOrderId().equals(orderId))
-					counter += (Double.parseDouble(line.getSalePrice()) + Double.parseDouble(line.getShippingPrice()));
-				
-			} catch (InputException e) {
-				e.printStackTrace();
-			}
-			
-		}
-		
-		return counter;
-	}
-
-	private enum Status{
-		ERROR, OK
-	}
-	
-	private static void readParameters(String fileName) {
+	public static void readParameters(String fileName) {
 		mariaDB = new DBParameters();
 		ftp = new FTPParameters();
 
@@ -202,7 +150,7 @@ public class main {
 
 	}
 
-	private static List<InputFileLine> readInputFile(String fileName) {
+	public static List<InputFileLine> readInputFile(String fileName) {
 		Scanner scanner = null;
 		List<InputFileLine> listOfLines = new ArrayList<>();
 
@@ -210,10 +158,11 @@ public class main {
 			scanner = new Scanner(new File(fileName));
 			scanner.nextLine();
 
-			while (scanner.hasNextLine()) {
-
+			while (scanner.hasNextLine()) {				
+				
+				
 				String[] line = scanner.nextLine().split(";");
-
+				
 				InputFileLine item = new InputFileLine();
 				item.setLineNumber(line[0]);
 				item.setOrderItemId(line[1]);
@@ -236,6 +185,8 @@ public class main {
 			}
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
+		} catch(ArrayIndexOutOfBoundsException e){
+			e.printStackTrace();
 		} finally {
 			if (scanner != null)
 				scanner.close();
@@ -245,7 +196,7 @@ public class main {
 
 	}	
 	
-	private static void createResponseFile(List<ResponseFileLine> list) {
+	public static void createResponseFile(List<ResponseFileLine> list) {
 		BufferedWriter bw = null;
 		try {
 			bw = new BufferedWriter(new FileWriter("responseFile.csv"));

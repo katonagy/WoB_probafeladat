@@ -1,6 +1,6 @@
 LineNumber;Status;Message
 1;;OK
-2;(conn=23) Duplicate entry '1' for key 'PRIMARY';ERROR
+2;;OK
 3;;OK
 4;;OK
 5;;OK
@@ -9,5 +9,6 @@ LineNumber;Status;Message
 8;Not valid date format;ERROR
 9;Not valid postcode;ERROR
 10;Not valid sale price;ERROR
-11;;OK
+11;Not valid shipping price;ERROR
 12;Not valid status;ERROR
+3;Duplicated OrderItem;ERROR

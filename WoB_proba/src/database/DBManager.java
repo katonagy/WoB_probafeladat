@@ -65,7 +65,7 @@ public class DBManager {
 			System.out.println("Record is inserted into Order table!");
 
 		} catch (SQLException e) {
-			System.out.println(e.getMessage());
+//			System.out.println(e.getMessage());
 			throw new SQLException(e.getMessage());
 		} catch (NullPointerException e){
 			System.out.println(e.getMessage());
@@ -102,7 +102,7 @@ public class DBManager {
 			System.out.println("Record is inserted into OrderItem table!");
 
 		} catch (SQLException e) {
-			System.out.println(e.getMessage());
+//			System.out.println(e.getMessage());
 			throw new SQLException(e.getMessage());
 
 		} finally {

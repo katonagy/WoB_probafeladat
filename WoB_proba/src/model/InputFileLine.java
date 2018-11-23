@@ -1,10 +1,15 @@
 package model;
 
+import java.sql.Date;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.Calendar;
+import java.util.List;
 import java.util.Locale;
 
 import javax.mail.internet.AddressException;
@@ -137,41 +142,42 @@ public class InputFileLine {
 	}
 
 	public boolean isValid() throws InputException {
-		if(!isValidEmailAddress(this.buyerEmail))
-			throw new InputException("Not valid email");
 		
-		if(this.lineNumber.isEmpty())
+		if(this.lineNumber == null || this.lineNumber.isEmpty())
 			throw new InputException("Line number should not be empty");
 		
-		if(this.orderItemId.isEmpty())
+		if(this.orderItemId == null || this.orderItemId.isEmpty())
 			throw new InputException("Order item id should not be empty");
 		
-		if(this.orderId.isEmpty())
+		if(this.orderId == null || this.orderId.isEmpty())
 			throw new InputException("Order id should not be empty");
 		
-		if(this.buyerName.isEmpty())
+		if(this.buyerName == null || this.buyerName.isEmpty())
 			throw new InputException("Buyer name should not be empty");
 		
-		if(this.buyerEmail.isEmpty())
+		if(this.buyerEmail == null || this.buyerEmail.isEmpty())
 			throw new InputException("Buyer email should not be empty");
 		
-		if(this.address.isEmpty())
+		if(this.address == null || this.address.isEmpty())
 			throw new InputException("Address should not be empty");
 			
-		if(this.postcode.isEmpty())
+		if(this.postcode == null || this.postcode.isEmpty())
 			throw new InputException("Postcode should not be empty");
 		
-		if(this.salePrice.isEmpty())
+		if(this.salePrice== null || this.salePrice.isEmpty())
 			throw new InputException("Sale price should not be empty");
 		
-		if(this.shippingPrice.isEmpty())
-			throw new InputException("Sale price should not be empty");
+		if(this.shippingPrice == null || this.shippingPrice.isEmpty())
+			throw new InputException("Shipping price should not be empty");
 		
-		if(this.SKU.isEmpty())
+		if(this.SKU == null || this.SKU.isEmpty())
 			throw new InputException("SKU should not be empty");
 		
-		if(this.status.isEmpty())
+		if(this.status == null || this.status.isEmpty())
 			throw new InputException("Status should not be empty");
+		
+		if(!isValidEmailAddress(this.buyerEmail))
+			throw new InputException("Not valid email");
 		
 		if(!isValidDateFormat("yyyy-MM-dd",this.orderDate,Locale.ENGLISH))
 			throw new InputException("Not valid date format");
@@ -225,8 +231,7 @@ public class InputFileLine {
 	                String result = lt.format(fomatter);
 	                return result.equals(value);
 	            } catch (DateTimeParseException e2) {
-	                // Debugging purposes
-	                //e2.printStackTrace();
+//	                System.out.println(e.getMessage());
 	            }
 	        }
 	    }
@@ -260,5 +265,70 @@ public class InputFileLine {
 		
 		return false;
 	}
+	
+	public OrderItem parseIntoOrderItem() {
+		OrderItem item = new OrderItem();
+		
+		item.setOrderId(Integer.parseInt(this.orderId));
+		item.setOrderItemId(Integer.parseInt(this.orderItemId));
+		item.setSalePrice(Double.parseDouble(this.salePrice));
+		item.setShippingPrice(Double.parseDouble(this.shippingPrice));
+		item.setSKU(this.SKU);
+		item.setStatus(this.status);
+		item.setTotalItemPrice(Double.parseDouble(this.salePrice) 
+				+ Double.parseDouble(this.shippingPrice));
+		
+		return item;
+	}
+
+	public Order parseIntoOrder(List<InputFileLine> list) {
+		Order item = new Order();
+		
+		item.setAddress(this.address);
+		item.setBuyerEmail(this.buyerEmail);
+		item.setBuyerName(this.buyerName);
+		item.setOrderId(Integer.parseInt(this.orderId));
+		item.setOrderTotalValue(calculateTotalItemPrice(this.orderId, this.orderItemId, list));
+		item.setPostcode(Integer.parseInt(this.postcode));
+		
+		if(this.orderDate.isEmpty()){
+			Calendar cal = Calendar.getInstance();
+			item.setOrderDate(new Date(cal.getTimeInMillis()));
+		}else{
+			SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+			java.util.Date parsed;
+			try {
+				parsed = format.parse(this.orderDate);
+				item.setOrderDate(new Date(parsed.getTime()));
+			} catch (ParseException e) {
+				System.out.println(e.getMessage());
+			}			
+		}
+		
+		return item;
+		
+	}
+
+	private double calculateTotalItemPrice(String orderId, String orderItemId,  List<InputFileLine> inputFilelines) {
+		double counter = 0;
+		
+		for(InputFileLine line : inputFilelines){
+		
+			try {
+				
+				if(line.isValid() && line.getOrderId().equals(orderId)){
+					counter += Double.parseDouble(line.getSalePrice()) + Double.parseDouble(line.getShippingPrice());
+					
+				}
+				
+			} catch (InputException e) {
+//				System.out.println(e.getMessage());
+			}
+		
+		}
+		
+		return counter;
+	}
+
 	
 }
